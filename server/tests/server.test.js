@@ -1,18 +1,21 @@
 const expect = require('expect');
 const request = require('supertest');
+const {ObjectId} = require('mongodb');
 
 var {app} = require('./../server');
 var {Todo} = require('./../models/todo');
 
-const PseudTodos = [{
+const PseudoTodos = [{
+  _id: new ObjectId(),
   text: 'First todo'
 },{
+  _id: new ObjectId(),
   text: 'Second todo'
 }]
 
 beforeEach((done) => {
   Todo.remove({}).then(() => {
-    return Todo.insertMany(PseudTodos);
+    return Todo.insertMany(PseudoTodos);
   }).then(() => done());
 });
 
@@ -76,4 +79,38 @@ describe('GET /todos',() => {
     })
     .end(done)
   })
+});
+
+
+describe('GET /todos/:id',() => {
+  it('should return correct todo',(done) => {
+    request(app)
+    .get(`/todos/${PseudoTodos[0]._id.toHexString()}`)
+    .expect(200)
+    .expect((res) => {
+      expect(res.body.todo.text).toBe(PseudoTodos[0].text);
+    })
+    .end(done)
+  });
+
+  it('should return error for invalid id',(done) => {
+    request(app)
+    .get('/todos/12345')
+    .expect(400)
+    .expect((res) => {
+      expect(res.body.err).toBe('Todo Id is invalid');
+    })
+    .end(done)
+  });
+
+  it('should return error for todo not found',(done) => {
+    request(app)
+    .get(`/todos/${new ObjectId()}`)
+    .expect(404)
+    .expect((res) => {
+      expect(res.body.err).toBe('Todo not found');
+    })
+    .end(done)
+  });
+
 });
