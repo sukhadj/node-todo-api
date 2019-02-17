@@ -10,6 +10,8 @@ var app = express();
 
 app.use(bodyParser.json());
 
+
+// POST /todos
 app.post('/todos',(req, res) => {
   var todo = new Todo({
     text: req.body.text
@@ -25,6 +27,7 @@ app.post('/todos',(req, res) => {
 });
 
 
+// GET /todos
 app.get('/todos',(req, res) => {
   Todo.find({}).then((todos) => {
     res.send({todos});
@@ -34,6 +37,7 @@ app.get('/todos',(req, res) => {
 });
 
 
+// GET /todos/:id
 app.get('/todos/:id',(req, res) => {
   var id = req.params.id;
 
@@ -50,6 +54,26 @@ app.get('/todos/:id',(req, res) => {
   });
 
 });
+
+
+// DELETE /todos/:id
+app.delete('/todos/:id',(req, res) => {
+  var id = req.params.id;
+
+  if(!ObjectId.isValid(id))
+  {
+      return res.status(400).send({err: 'Todo Id is invalid'});
+  }
+
+  Todo.findByIdAndRemove(id).then((todo) => {
+    if (!todo) {
+        return res.status(404).send({err: 'Todo not found'});
+    }
+    res.send({todo});
+  });
+});
+
+
 
 app.listen(3000, () => {
   console.log("Started on port 3000");

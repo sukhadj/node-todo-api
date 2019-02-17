@@ -14,12 +14,16 @@ const PseudoTodos = [{
 }]
 
 beforeEach((done) => {
-  Todo.remove({}).then(() => {
+  Todo.deleteMany({}).then(() => {
     return Todo.insertMany(PseudoTodos);
-  }).then(() => done());
-});
+  }).then(() => {
+    done();
+  })
+})
+
 
 describe('POST /todos',() => {
+
   it('should create a new todo',(done) => {
     var text = 'Test todo text';
 
@@ -106,6 +110,40 @@ describe('GET /todos/:id',() => {
   it('should return error for todo not found',(done) => {
     request(app)
     .get(`/todos/${new ObjectId()}`)
+    .expect(404)
+    .expect((res) => {
+      expect(res.body.err).toBe('Todo not found');
+    })
+    .end(done)
+  });
+
+});
+
+
+describe('DELETE /todos/:id',() => {
+  it('should delete correct todo',(done) => {
+    request(app)
+    .delete(`/todos/${PseudoTodos[0]._id.toHexString()}`)
+    .expect(200)
+    .expect((res) => {
+      expect(res.body.todo.text).toBe(PseudoTodos[0].text);
+    })
+    .end(done)
+  });
+
+  it('should return error for invalid id',(done) => {
+    request(app)
+    .delete('/todos/12345')
+    .expect(400)
+    .expect((res) => {
+      expect(res.body.err).toBe('Todo Id is invalid');
+    })
+    .end(done)
+  });
+
+  it('should return error for todo not found',(done) => {
+    request(app)
+    .delete(`/todos/${new ObjectId()}`)
     .expect(404)
     .expect((res) => {
       expect(res.body.err).toBe('Todo not found');
