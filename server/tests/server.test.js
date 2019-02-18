@@ -152,3 +152,46 @@ describe('DELETE /todos/:id',() => {
   });
 
 });
+
+
+describe('PATCH /todos/:id',() => {
+  var body = {
+    text: "First todo updated",
+    completed: true
+  }
+
+  it('should update the todo correctly',(done) => {
+    request(app)
+    .patch(`/todos/${PseudoTodos[0]._id.toHexString()}`)
+    .send(body)
+    .expect(200)
+    .expect((res) => {
+      expect(res.body.todo.text).toBe(body.text);
+      expect(res.body.todo.completed).toBe(body.completed);
+    })
+    .end(done)
+  });
+
+  it('should return error for invalid id',(done) => {
+    request(app)
+    .patch('/todos/12345')
+    .send(body)
+    .expect(400)
+    .expect((res) => {
+      expect(res.body.err).toBe('Todo Id is invalid');
+    })
+    .end(done)
+  });
+
+  it('should return error for todo not found',(done) => {
+    request(app)
+    .patch(`/todos/${new ObjectId()}`)
+    .send(body)
+    .expect(404)
+    .expect((res) => {
+      expect(res.body.err).toBe('Todo not updated');
+    })
+    .end(done)
+  });
+
+});
